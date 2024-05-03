@@ -26,7 +26,7 @@ const {
   addanothermail,
   addanotherphone ,
   deleteanothermail,
-  deleteanotherphone,
+  deleteanotherphone,loginTest,loginTest2,loginTest3
 
 } = require('../services/auth.service');
 //__________________________________________________________________
@@ -43,6 +43,17 @@ const {
   
 } = require('../services/camera.service');
 
+//________________________________________________________________________
+const {SetScreenshots}=require('../GetScreenShots')
+
+//_________________________________________________________________________
+const {consumeMessages}=require('../consumeDataFromPython')
+//__________________________________________________________________________
+const {consumeAndProcessMessages}=require("../test.js")
+//)__________________________________________________________________________
+const {performConsumingInBackground}=require('../CycleOfConsuming.js')
+
+
 
 
 const router = express.Router();
@@ -52,12 +63,16 @@ const router = express.Router();
 //signup and login 
 router.route('/signup').post(uploadUserImage, resizeImage,SignUpValidator ,signup);
 router.route('/login').post(LogInValidator,login);
+router.route('/consume').post(performConsumingInBackground);
+
+
+
 //__________________________________________________________________________
 //update password : 
 router.put('/changeMyPassword',protect,changeLoggedUserPasswordValidator,updateLoggedUserPassword);
 //__________________________________________________________________________
 //get my data after login 
-router.get('/getMe', protect,getLoggedUserData, getUser);
+router.get('/getMe', protect,getLoggedUserData,getUser);
 //__________________________________________________________________________
 //update username
 router.route('/updateusername').put(protect,editUsernameValidator,updateLoggedUserName);
@@ -84,11 +99,12 @@ router.route('/deleteanotherphone').put(protect,anoterphoneValidator,deleteanoth
 //Camera options 
 router.route('/addcamera').post(protect,AddCameraValidator ,addCamera);
 
-router.route('/deletecamera').put(protect,AddCameraValidator,deletecamera);
+router.route('/deletecamera').put(protect,deletecamera);
 
 router.route('/getcameras').get(protect,getCameraNames);
 
 router.route('/getsinglecamera').get(protect,getSingleCamera);
+
 
 
 

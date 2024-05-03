@@ -14,6 +14,7 @@ const CameraSchema= new mongoose.Schema({
     user:{
         type:mongoose.Schema.Types.ObjectId,ref:'User'
     }
+    ,port:String
 }
 
  ,{timestamps:true});

@@ -20,6 +20,6 @@ exports.AddCameraValidator = [
     ,
    check('screenshots').optional()
    
-   ,
+   ,check('port').notEmpty(),
    validatorMiddleware
 ];

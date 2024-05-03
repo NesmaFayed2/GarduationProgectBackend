@@ -8,6 +8,15 @@ const asyncHandler = require('express-async-handler');
 const ApiError = require('../utiles/apiError');
 const User=require('../models/user.model');
 const factory = require('./handlersFactory');
+const fs = require('fs');
+const fsExtra = require('fs-extra');
+const {connect}=require('../publishCameraData')
+const{consumeAndProcessMessages}=require("../test.js")
+
+
+
+
+
 
 const createToken=(payload)=>{
     return jwt.sign({userId:payload},process.env.JWT_SECRET_KEY,{expiresIn:process.env.JWT_EXPIRES_TIME});      
@@ -59,24 +68,153 @@ exports.signup=asyncHandler(async (req,res,next)=>{
     // @desc    login
    // @route   GET /api/v1/auth/login
   // @access  public
+//#########################################################################
+  exports.loginTest = asyncHandler(async (req, res, next) => {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+        return next(new ApiError("Incorrect Email"));
+    }
+    if (!await bcrypt.compareSync(req.body.password, user.password)) {
+        return next(new ApiError("Incorrect Password"));
+    }
 
-exports.login=asyncHandler(async (req,res,next)=>{
-  
-  const user=await User.findOne({email:req.body.email});
-  if(!user){
-    return next(new ApiError("Incorrect Email"));
-  }
-  if(!await bcrypt.compareSync(req.body.password,user.password)){
-    return next(new ApiError("Incorrect  Password"));
-    
-  }
-   
-  const token =createToken(user._id) ;
-  res.status(201).json({date:user , token:token});
-  
+    const token = createToken(user._id);
 
+    // Serialize user data to JSON format
+    const userData = JSON.stringify({ user, token });
+
+    // Write user data to a JSON file
+    const filename = `${user.email}_userData.json`;
+    fs.writeFile(filename, userData, (err) => {
+        if (err) {
+            console.error("Error writing user data to file:", err);
+            return next(new ApiError("Failed to create user data file"));
+        }
+        console.log("User data file created successfully:", filename);
+    });
+
+    res.status(201).json({ user, token });
+});
+exports.loginTest2 = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+      return next(new ApiError("Incorrect Email"));
+  }
+  if (!await bcrypt.compareSync(req.body.password, user.password)) {
+      return next(new ApiError("Incorrect Password"));
+  }
+
+  const token = createToken(user._id);
+
+  // Path to the existing folder to be copied
+  const sourceFolder = './User-X';
+  // Path to the destination folder (create a unique folder for each user)
+  const destinationFolder = `./User-${user.name}`;
+
+  try {
+      // Check if the source folder exists
+      if (!fs.existsSync(sourceFolder)) {
+          return next(new ApiError("Source folder does not exist"));
+      }
+
+      // Copy the folder recursively to the destination
+      await fsExtra.copy(sourceFolder, destinationFolder);
+
+      // Optionally, you can perform additional setup or modifications to the copied folder here
+
+      console.log(`Folder copied successfully for user ${user.email}`);
+      
+
+  // Send response with user data and token
+  res.status(201).json({ user, token });
+      // Send response with user data and token
+      res.status(201).json({ user, token });
+  } catch (err) {
+      console.error("Error copying folder:", err);
+      return next(new ApiError("Failed to copy folder"));
+  }
+
+  
 });
 
+exports.loginTest3 = asyncHandler(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+      return next(new ApiError("Incorrect Email"));
+  }
+  if (!await bcrypt.compareSync(req.body.password, user.password)) {
+      return next(new ApiError("Incorrect Password"));
+  }
+
+  const token = createToken(user._id);
+
+  // Path to the folder containing the user's data
+  const folderPath = `./User-${user.name}`;
+  // Path to the existing JSON file within the user's folder
+  const jsonFilePath = `./User-${user.name}/JsonFile.json`;
+
+  try {
+    let jsonData = {};
+
+    // Check if JSON file exists
+    if (fs.existsSync(jsonFilePath)) {
+        // Read existing JSON file
+        const existingData = fs.readFileSync(jsonFilePath, 'utf8');
+        // Parse existing JSON data
+        jsonData = JSON.parse(existingData);
+    }
+    
+
+    // Update JSON data with new user and token
+    jsonData.user = user;
+    jsonData.token = token;
+
+    // Serialize updated JSON data
+    const updatedData = JSON.stringify(jsonData, null, 2);
+
+    // Write updated data back to the JSON file
+    fs.writeFileSync(jsonFilePath, updatedData);
+
+    console.log("User data updated successfully:", jsonFilePath);
+
+    res.status(201).json({ user, token });
+} catch (err) {
+    console.error("Error updating user data:", err);
+    return next(new ApiError("Failed to update user data"));
+}
+});
+
+
+exports.login = asyncHandler(async (req, res, next) => {
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+        return next(new ApiError("Incorrect Email"));
+    }
+    if (!await bcrypt.compareSync(req.body.password, user.password)) {
+        return next(new ApiError("Incorrect Password"));
+    }
+    Cameradata=user.cameras;
+
+    const token = createToken(user._id);
+
+    // SEND CAMERA DATA AS JSON FILE
+    const userData = JSON.stringify({ Cameradata });
+    const filename = `CameraData.json`;
+    fs.writeFileSync(filename, userData, (err) => {
+        if (err) {
+            console.error("Error writing user data to file:", err);
+            return next(new ApiError("Failed to create user data file"));
+        }
+        console.log("User data file created successfully:", filename);
+    });
+    connect();
+  
+    res.status(201).json({ user, token });
+  
+   
+
+});
+//##########################################################################
 //just for test
 exports.data=asyncHandler(async (req,res,next)=>{
    console.log(req.headers.authorization);
@@ -128,6 +266,8 @@ exports.protect = asyncHandler(async (req, res, next) => {
   }
 
   req.user = currentUser;
+
+
   
   next();
 });
@@ -156,12 +296,14 @@ exports.updateLoggedUserPassword = asyncHandler(async (req, res, next) => {
 });
 //_________________________________________________
 // @desc    Get Logged user data
-// @route   GET /api/v1/auth//getMe
+// @route   GET /api/v1/auth/getMe
 // @access  Private/Protect
 exports.getLoggedUserData = asyncHandler(async (req, res, next) => {
   req.params.id = req.user._id;
   next();
 });
+
+
 
 
 
@@ -275,6 +417,8 @@ exports.deleteanotherphone = asyncHandler(async (req, res, next) => {
    
  });
  //_________________________________________________________
+
+
 
 
 

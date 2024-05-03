@@ -3,8 +3,10 @@ const userRoute= require('./routes/user.route');
 const authRoute=require('./routes/auth.route');
 const bodyParser = require('body-parser');
 
+
+
 const app=express();
-const port = 4000||process.env.Port;
+const port = 4001||process.env.Port;
 
 //_____________________
 app.use(bodyParser.json());
@@ -15,14 +17,16 @@ app.use('/api/v1/users',userRoute);
 app.use('/api/v1/auth',authRoute);
 
 
-
-
 //connect to database
 const mongoose =require('mongoose'); 
 const url = 'mongodb+srv://nesmaF:123456789n@cluster0.hooobf4.mongodb.net/DataBase?retryWrites=true&w=majority&appName=Cluster0';
 mongoose.connect(url).then(()=>{
     console.log('mongodb connected successfully');
 });
+
+
+
+
 
 
 
