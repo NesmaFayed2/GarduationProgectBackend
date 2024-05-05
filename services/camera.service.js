@@ -20,7 +20,9 @@ const {connect}=require('../publishCameraData')
         ip:req.body.ip,
         name:req.body.name,
         user:req.user._id,
-        port:req.body.port
+        port:req.body.port,
+        username:req.body.username,
+        password:req.body.password
     });
     Currentuser.cameras.push(camera);
     await Currentuser.save();
@@ -28,7 +30,7 @@ const {connect}=require('../publishCameraData')
     Cameradata=Currentuser.cameras;
     const userData = JSON.stringify({ Cameradata });
     const filename = `CameraData.json`;
-    fs.writeFile(filename, userData, (err) => {
+    fs.writeFileSync(filename, userData, (err) => {
         if (err) {
             console.error("Error writing user data to file:", err);
             return next(new ApiError("Failed to create user data file"));
@@ -42,31 +44,10 @@ const {connect}=require('../publishCameraData')
 });
 
 
-exports.deletecamera = asyncHandler(async (req, res, next) => {
-     const cameraName=req.body.name;
-     const camera = await Camera.findOneAndDelete({ name: cameraName });
-     const user = await User.findById(req.user._id);
-     user.cameras = user.cameras.filter(camera => camera.name !== req.body.name);
-     await user.save();
-   //create json file
-    Cameradata=user.cameras;
-    const userData = JSON.stringify({ Cameradata });
-     const filename = `CameraData.json`;
-     fs.writeFile(filename, userData, (err) => {
-      if (err) {
-          console.error("Error writing user data to file:", err);
-          return next(new ApiError("Failed to create user data file"));
-      }
-      console.log("User data file created successfully:", filename);
-  });
-
-     res.status(200).json({ success: true, data: user }); 
-     connect();
-     
-   });
 
 
 exports.getCameraNames=asyncHandler(async (req, res, next) => {
+  
     const Currentuser = await User.findById(req.user._id);
     const cameraNames = Currentuser.cameras.map(camera => camera.name);
     res.status(200).json({  data: cameraNames });
@@ -75,11 +56,94 @@ exports.getCameraNames=asyncHandler(async (req, res, next) => {
 
   exports.getSingleCamera=asyncHandler(async (req, res, next) => {
     const Currentuser = await User.findById(req.user._id);
+    const cameraName=req.body.name.toLowerCase();
+    const camera = Currentuser.cameras.filter(camera => camera.name.toLowerCase() == cameraName);
+    console.log(camera)
+    if(camera.length===0){
+      res.status(404).json({  data: "camera not existed"});
+    }else {
+      res.status(200).json({  data: camera});
+    }
+   
+  });
+
+
+  exports.deletecamera = asyncHandler(async (req, res, next) => {
+   
+
+
     const cameraName=req.body.name;
-    const camera = await Camera.findOne({ name: cameraName });
-    res.status(200).json({  data: camera});
+    const camera = await Camera.findOneAndDelete({ name: cameraName });
+    const user = await User.findById(req.user._id);
+    user.cameras =await user.cameras.filter(camera => camera.name.toLowerCase() !== cameraName.toLowerCase());
+    await user.save();
+
+
+
+
+
+    
+  //create json file
+   Cameradata=user.cameras;
+   const userData = JSON.stringify({ Cameradata });
+    const filename = `CameraData.json`;
+    fs.writeFileSync(filename, userData, (err) => {
+     if (err) {
+         console.error("Error writing user data to file:", err);
+         return next(new ApiError("Failed to create user data file"));
+     }
+     console.log("User data file created successfully:", filename);
+ });
+
+    res.status(200).json({ success: true, data: user }); 
+    connect();
     
   });
+
+
+
+
+exports.editcamera=asyncHandler(async (req, res, next) => {
+  const updatedData = {
+    ip: req.body.ip,
+    name: req.body.name,
+    user: req.user._id,
+    port: req.body.port,
+    username: req.body.username,
+    password: req.body.password
+};
+  const user = await User.findById(req.user._id);
+  const cameraName = req.body.name;
+  const cameraIndex = user.cameras.findIndex(camera => camera.name === cameraName);
+  if (cameraIndex === -1) {
+    return next(new ApiError("Camera not found", 404));
+}
+  const camera = await Camera.findOneAndUpdate({name:cameraName},updatedData,{
+    new: true,
+  }  );
+  // Update only the specific camera's data in the user's cameras array
+  user.cameras[cameraIndex] = { ...user.cameras[cameraIndex], ...updatedData };
+ 
+  await user.save()
+
+  //create json file
+  Cameradata=user.cameras;
+  const userData = JSON.stringify({ Cameradata });
+   const filename = `CameraData.json`;
+   fs.writeFileSync(filename, userData, (err) => {
+    if (err) {
+        console.error("Error writing user data to file:", err);
+        return next(new ApiError("Failed to create user data file"));
+    }
+    console.log("User data file created successfully:", filename);
+});
+  
+   res.status(200).json({ data: camera });
+   connect();
+   
+  
+  
+});
 //______________________________________________________________________
 
 

@@ -21,5 +21,8 @@ exports.AddCameraValidator = [
    check('screenshots').optional()
    
    ,check('port').notEmpty(),
+   check('username').notEmpty().withMessage('user name is required'),
+   check('password').notEmpty().withMessage('password is required'),
+
    validatorMiddleware
 ];

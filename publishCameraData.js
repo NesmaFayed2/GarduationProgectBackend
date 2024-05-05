@@ -17,7 +17,7 @@ exports.connect = asyncHandler(async (req, res, next) => {
 
     try {
         
-        const connection = await amqp.connect("amqp://localhost:5672");
+        const connection = await amqp.connect("amqp://192.168.1.12:5000");
         const channel = await connection.createChannel();
         const result = await channel.assertQueue("CameraData");
         channel.sendToQueue("CameraData", Buffer.from(JSON.stringify(msg)));

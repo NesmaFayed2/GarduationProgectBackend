@@ -186,6 +186,8 @@ exports.loginTest3 = asyncHandler(async (req, res, next) => {
 
 
 exports.login = asyncHandler(async (req, res, next) => {
+
+ 
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
         return next(new ApiError("Incorrect Email"));
@@ -199,6 +201,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 
     // SEND CAMERA DATA AS JSON FILE
     const userData = JSON.stringify({ Cameradata });
+    console.log(userData);
     const filename = `CameraData.json`;
     fs.writeFileSync(filename, userData, (err) => {
         if (err) {
@@ -208,6 +211,8 @@ exports.login = asyncHandler(async (req, res, next) => {
         console.log("User data file created successfully:", filename);
     });
     connect();
+
+    
   
     res.status(201).json({ user, token });
   

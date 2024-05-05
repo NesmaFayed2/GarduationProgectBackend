@@ -39,7 +39,7 @@ const {
   deletecamera,
   getCameraNames,
   
-  getSingleCamera
+  getSingleCamera,editcamera
   
 } = require('../services/camera.service');
 
@@ -104,6 +104,9 @@ router.route('/deletecamera').put(protect,deletecamera);
 router.route('/getcameras').get(protect,getCameraNames);
 
 router.route('/getsinglecamera').get(protect,getSingleCamera);
+
+router.route('/editcamera').put(protect,AddCameraValidator,editcamera);
+
 
 
 
