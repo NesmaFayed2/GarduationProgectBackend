@@ -11,6 +11,9 @@ const port = 4001||process.env.Port;
 //_____________________
 app.use(bodyParser.json());
 app.use(express.json());
+// Increase the limit for request body size (e.g., 10MB)
+app.use(bodyParser.urlencoded({ extended: true, limit: '200mb' }));
+app.use(bodyParser.json({ limit: '200mb' }));
 
 // routes
 app.use('/api/v1/users',userRoute);

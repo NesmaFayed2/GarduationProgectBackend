@@ -8,12 +8,15 @@ async function consumeAndProcessMessages() {
     try {
         const connection = await amqp.connect('amqp://localhost:5672');
         const channel = await connection.createChannel();
+        if(!channel){
+            console.log("no connection")
+        }
 
-        await channel.assertExchange('Screenshots', 'direct');
+        await channel.assertExchange('screenshots', 'direct');
 
-        const queue = await channel.assertQueue('128.2.150.7');
+        const queue = await channel.assertQueue('192.168.1.130');
 
-        await channel.bindQueue(queue.queue, 'Screenshots', '128.2.150.7');
+        await channel.bindQueue(queue.queue, 'screenshots', '192.168.1.130');
 
         console.log('Waiting for messages. To exit, press CTRL+C');
 
@@ -23,7 +26,7 @@ async function consumeAndProcessMessages() {
                     const data = JSON.parse(msg.content.toString());
 
                      const filename = `DataConsumed.json`;
-                    fs.writeFileSync(filename, msg.content.toString(), (err) => {
+                    fs.writeFileSync(filename,msg.content, (err) => {
                         if (err) {
                             console.error("Error writing user data to file:", err);
                             throw new ApiError("Failed to create user data file");
@@ -31,7 +34,7 @@ async function consumeAndProcessMessages() {
                         console.log("User data file created successfully:", filename);
                     });
 
-                    console.log('Received message:', data);
+                   await console.log('Received message:', data);
 //#####################################################################################
                     console.log('give the data in the json file to database');
                     SetScreenshots()

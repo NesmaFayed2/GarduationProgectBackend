@@ -26,7 +26,7 @@ const {
   addanothermail,
   addanotherphone ,
   deleteanothermail,
-  deleteanotherphone,loginTest,loginTest2,loginTest3
+  deleteanotherphone,loginTest,loginTest2,loginTest3,encodeimage
 
 } = require('../services/auth.service');
 //__________________________________________________________________
@@ -106,6 +106,10 @@ router.route('/getcameras').get(protect,getCameraNames);
 router.route('/getsinglecamera').get(protect,getSingleCamera);
 
 router.route('/editcamera').put(protect,AddCameraValidator,editcamera);
+
+
+//___________________________________________________________
+router.route('/decode').get(encodeimage);
 
 
 

@@ -35,12 +35,18 @@ fs.readFile(fileName, 'utf8', async (err, data) => {
           return res.status(404).send('Camera not found');
           }
 
-         camera.screenshots.push(jsonData.message.screenshot); // Update screenshots
+          const filenamee = `screenshot`;
+          fs.writeFileSync(filename,jsonData.message.screenshot, (err) => {
+              if (err) {
+                  console.error("Error url is not complete :", err);
+                  throw new ApiError("Failed to create user data file");
+              }
+              console.log("url transfered successfully", filenamee);
+          });
+
+         await camera.screenshots.push(jsonData.message.screenshot.toString()); // Update screenshots
          await User.findByIdAndUpdate(jsonData.message.userId, user, { new: true });
-         
-         
-    
-     
+
          next();
       } catch (err) {
         console.error('Error processing screenshot:', err);
