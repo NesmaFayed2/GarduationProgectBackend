@@ -5,7 +5,8 @@ const amqp=require('amqplib');
 const asyncHandler = require('express-async-handler');
 const fs = require('fs');
 const {consumeMessages}=require('./consumeDataFromPython')
-
+const path = require('path');
+const sharp = require('sharp');
 
 exports.SetScreenshots = asyncHandler(async (req, res, next) => {
 
@@ -29,22 +30,27 @@ fs.readFile(fileName, 'utf8', async (err, data) => {
         if (!user) {
           return res.status(404).send('User not found');
           }
-         
         camera = await user.cameras.find(camera => camera.ip === jsonData.message.cameraIp);
         if (!camera) {
           return res.status(404).send('Camera not found');
           }
+          
+           // Convert base64 encoded screenshot to buffer
+         const imageBuffer = await Buffer.from(jsonData.message.screenshot, 'base64');
+        const camip=jsonData.message.cameraIp;
+        console.log(camip)
+        // Create directory for camera IP if not exists
+        let screenshotsDirectory = path.join(__dirname,camip);
+        await fs.promises.mkdir(screenshotsDirectory, { recursive: true });
 
-          const filenamee = `screenshot`;
-          fs.writeFileSync(filename,jsonData.message.screenshot, (err) => {
-              if (err) {
-                  console.error("Error url is not complete :", err);
-                  throw new ApiError("Failed to create user data file");
-              }
-              console.log("url transfered successfully", filenamee);
-          });
+        // Save screenshot as file
+        const screenshotFileName = `${Date.now()}.jpg`;
+        const screenshotFilePath = path.join(screenshotsDirectory, screenshotFileName);
+        await sharp(imageBuffer).toFile(screenshotFilePath);
 
-         await camera.screenshots.push(jsonData.message.screenshot.toString()); // Update screenshots
+        // Store file path in MongoDB
+        camera.screenshots.push(screenshotFilePath);
+       
          await User.findByIdAndUpdate(jsonData.message.userId, user, { new: true });
 
          next();
@@ -59,3 +65,5 @@ fs.readFile(fileName, 'utf8', async (err, data) => {
 
    
    });
+
+//_____________________________________________________

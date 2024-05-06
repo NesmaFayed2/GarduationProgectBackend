@@ -26,7 +26,7 @@ const {
   addanothermail,
   addanotherphone ,
   deleteanothermail,
-  deleteanotherphone,loginTest,loginTest2,loginTest3,encodeimage
+  deleteanotherphone,loginTest,loginTest2,loginTest3,encodeimage,getallscreenhistory,getwarnings
 
 } = require('../services/auth.service');
 //__________________________________________________________________
@@ -111,6 +111,12 @@ router.route('/editcamera').put(protect,AddCameraValidator,editcamera);
 //___________________________________________________________
 router.route('/decode').get(encodeimage);
 
+//____________________________________________________________
+//get all screen for one camera
+router.route('/getscreenforone').get(protect,getallscreenhistory);
+//_____________________________________________________________
+//get immediate warnings
+router.route('/warnings').get(getwarnings);
 
 
 

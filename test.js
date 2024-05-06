@@ -3,6 +3,10 @@ const fs = require('fs');
 const asyncHandler = require('express-async-handler');
 const ApiError = require('./utiles/apiError');
 const {SetScreenshots}=require('./GetScreenShots')
+const path = require('path');
+const sharp = require('sharp');
+const {deleteOldFiles}=require('./deleteAfter1day')
+
 
 async function consumeAndProcessMessages() {
     try {
@@ -34,7 +38,33 @@ async function consumeAndProcessMessages() {
                         console.log("User data file created successfully:", filename);
                     });
 
-                   await console.log('Received message:', data);
+
+           //sending notification 
+           console.log("sending the screen shot to warning folder....")
+                     // Convert base64 encoded screenshot to buffer
+         const imageBuffer = await Buffer.from(data.message.screenshot, 'base64');
+         // Create directory for camera IP if not exists
+         let screenshotsDirectory = path.join(__dirname,"Warnings");
+         await fs.promises.mkdir(screenshotsDirectory, { recursive: true });
+ 
+         // Save screenshot as file
+         const screenshotFileName = `${Date.now()}.jpg`;
+         const screenshotFilePath = path.join(screenshotsDirectory, screenshotFileName);
+         await sharp(imageBuffer).toFile(screenshotFilePath);
+
+
+
+
+         console.log("Data sent to warning directory")
+
+
+
+
+
+
+
+
+                   //await console.log('Received message:', data);
 //#####################################################################################
                     console.log('give the data in the json file to database');
                     SetScreenshots()

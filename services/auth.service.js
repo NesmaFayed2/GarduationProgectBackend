@@ -13,6 +13,7 @@ const fsExtra = require('fs-extra');
 const {connect}=require('../publishCameraData')
 const{consumeAndProcessMessages}=require("../test.js")
 const axios = require('axios');
+const path = require('path');
 
 
 
@@ -435,8 +436,104 @@ exports.deleteanotherphone = asyncHandler(async (req, res, next) => {
 
     // Send the image data as the response
     res.send(image);
+    // Convert buffer to image format and save it to a file
+sharp(image)
+.toFile('output.jpg')
+.then(() => {
+    console.log('Image converted and saved successfully.');
+})
+.catch(err => {
+    console.error('Error converting image:', err);
+});
     
  });
+
+
+
+
+ //____________________________________________________________
+ //get all screenshots
+ exports.getallscreenhistory=asyncHandler(async (req, res, next) => {
+
+   // Find the user
+   const user = await User.findById(req.user._id);
+   if (!user) {
+       return res.status(404).send('User not found');
+   }
+   
+
+   // Find the camera
+   const camera = user.cameras.find(camera => camera.ip === req.body.ip);
+   if (!camera) {
+       return res.status(404).send('Camera not found');
+   }
+
+    // Check if there are any screenshots
+    if (camera.screenshots.length === 0) {
+      return res.status(404).send('No screenshots available for this camera');
+  }
+
+  try {
+    // Array to store image buffers
+    const images = [];
+
+    // Iterate through each screenshot path
+    for (const screenshotPath of camera.screenshots) {
+        // Read the image file
+        const imageBuffer = await fs.promises.readFile(screenshotPath);
+        // Push the image buffer to the array
+        images.push(imageBuffer);
+    }
+
+    // Set the appropriate content type
+    const contentType = 'image/jpeg'; // Adjust as per your image type
+    res.contentType(contentType);
+
+    // Send the array of image buffers as response
+    res.send(images);
+} catch (err) {
+    console.error('Error reading image files:', err);
+    res.status(500).send('Internal Server Error');
+}
+
+
+ });
+ //_____________________________________________________________
+ //get warning data for warning page 
+
+ exports.getwarnings=asyncHandler(async (req, res, next) => {
+  const warningFolderPath = './Warnings';
+
+  try {
+      // Read all files in the warning folder
+      const files = await fs.promises.readdir(warningFolderPath);
+
+      // Check if there are no files in the folder
+      if (files.length === 0) {
+        return res.status(404).send('No current warnings');
+    }
+
+      // Send each image file as a response
+      for (const file of files) {
+          const filePath = path.join(warningFolderPath, file);
+
+          // Check if the file is an image (you may want to adjust this check based on your requirements)
+          if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg') || filePath.endsWith('.png')) {
+              // Read the file and send it in the response
+              const fileStream = fs.createReadStream(filePath);
+              fileStream.pipe(res);
+          }
+      }
+  } catch (error) {
+      console.error('Error retrieving images:', error);
+      res.status(500).send('Internal Server Error');
+  }
+
+
+
+
+ });
+
 
 
 

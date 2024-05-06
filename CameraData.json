@@ -1,1 +1,1 @@
-{"Cameradata":[{"ip":"192.168.1.130","name":"camera1","screenshots":["hhh.png"],"user":"6622d9b98aaf147c6bdc1d8b","port":"8090","username":"ezhomecam","password":"123456","_id":"6636df1e336ca5b5f0388a5c","createdAt":"2024-05-05T01:21:34.588Z","updatedAt":"2024-05-05T01:21:34.588Z","__v":0}]}
+{"Cameradata":[{"ip":"192.168.1.130","name":"Camera1","screenshots":[],"user":"6622d9b98aaf147c6bdc1d8b","port":"8080","username":"ezhomecam","password":"123456","_id":"663872e1902e5e905922b7b7","createdAt":"2024-05-06T06:04:17.703Z","updatedAt":"2024-05-06T06:04:17.703Z","__v":0}]}
